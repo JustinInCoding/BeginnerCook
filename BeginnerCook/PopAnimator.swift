@@ -72,12 +72,20 @@ extension PopAnimator: UIViewControllerAnimatedTransitioning {
 			herbView.center = .init(x: initialFrame.midX, y: initialFrame.midY)
 		}
 		
+		herbView.layer.cornerRadius = presenting ? 20 / scaleTransform.a : 0
+		herbView.clipsToBounds = true
+		
 		if let toView = transitionContext.view(forKey: .to) {
 			containerView.addSubview(toView)
 		}
 		
 		containerView.bringSubviewToFront(herbView)
 		
+		guard let herbDetailsContainer = (transitionContext.viewController(forKey: presenting ? .to : .from) as? HerbDetailsViewController)?.containerView else { return }
+		
+		if presenting {
+			herbDetailsContainer.alpha = 0
+		}
 		
 		// 2) Animate
 		UIView.animate(
@@ -86,8 +94,10 @@ extension PopAnimator: UIViewControllerAnimatedTransitioning {
 			usingSpringWithDamping: 0.4,
 			initialSpringVelocity: 0,
 			animations: {
+				herbView.layer.cornerRadius = self.presenting ? 0 : 20 / scaleTransform.a
 				herbView.transform = self.presenting ? .identity : scaleTransform
 				herbView.center = .init(x: finalFrame.midX, y: finalFrame.midY)
+				herbDetailsContainer.alpha = self.presenting ? 1 : 0
 			},
 			completion: { _ in
 				// 3) Complete transition
