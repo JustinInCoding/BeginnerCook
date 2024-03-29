@@ -54,11 +54,12 @@ extension PopAnimator: UIViewControllerAnimatedTransitioning {
 		let finalFrame = toView.frame
 		
 		toView.transform = .init(
-			translationX: initialFrame.width / finalFrame.width,
+			scaleX: initialFrame.width / finalFrame.width,
 			y: initialFrame.height / finalFrame.height
 		)
+
+		toView.center = .init(x: initialFrame.midX, y: initialFrame.midY)
 		
-		toView.center = .init(x: initialFrame.minX, y: initialFrame.midY)
 		containerView.addSubview(toView)
 		
 		// 2) Animate
