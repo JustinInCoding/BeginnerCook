@@ -34,6 +34,7 @@ import UIKit
 
 final class PopAnimator: NSObject {
 	var originFrame = CGRect()
+	var presenting = true
 	let duration: TimeInterval = 1
 }
 
@@ -46,21 +47,37 @@ extension PopAnimator: UIViewControllerAnimatedTransitioning {
 		// 1) Set up transition
 		let containerView = transitionContext.containerView
 		
-		guard let toView = transitionContext.view(forKey: .to) else {
+		guard let herbView = transitionContext.view(forKey: presenting ? .to : .from) else {
 			return
 		}
 		
-		let initialFrame = originFrame
-		let finalFrame = toView.frame
+		let (initialFrame, finalFrame) = 
+			presenting
+			? (originFrame, herbView.frame)
+			: (herbView.frame, originFrame)
 		
-		toView.transform = .init(
-			scaleX: initialFrame.width / finalFrame.width,
-			y: initialFrame.height / finalFrame.height
-		)
+		let scaleTransform =
+			presenting
+			? CGAffineTransform(
+				scaleX: initialFrame.width / finalFrame.width,
+				y: initialFrame.height / finalFrame.height
+			)
+			: .init(
+				scaleX: finalFrame.width / initialFrame.width,
+				y: finalFrame.height / initialFrame.height
+			)
 
-		toView.center = .init(x: initialFrame.midX, y: initialFrame.midY)
+		if presenting {
+			herbView.transform = scaleTransform
+			herbView.center = .init(x: initialFrame.midX, y: initialFrame.midY)
+		}
 		
-		containerView.addSubview(toView)
+		if let toView = transitionContext.view(forKey: .to) {
+			containerView.addSubview(toView)
+		}
+		
+		containerView.bringSubviewToFront(herbView)
+		
 		
 		// 2) Animate
 		UIView.animate(
@@ -69,11 +86,14 @@ extension PopAnimator: UIViewControllerAnimatedTransitioning {
 			usingSpringWithDamping: 0.4,
 			initialSpringVelocity: 0,
 			animations: {
-				toView.transform = .identity
-				toView.center = .init(x: finalFrame.midX, y: finalFrame.midY)
+				herbView.transform = self.presenting ? .identity : scaleTransform
+				herbView.center = .init(x: finalFrame.midX, y: finalFrame.midY)
 			},
 			completion: { _ in
 				// 3) Complete transition
+				if !self.presenting {
+					(transitionContext.viewController(forKey: .to) as! ViewController).selectedImage.alpha = 1
+				}
 				transitionContext.completeTransition(true)
 			}
 		)
