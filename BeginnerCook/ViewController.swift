@@ -55,15 +55,30 @@ final class ViewController: UIViewController {
             let herbDetails: HerbDetailsViewController = .instantiate {
               .init(coder: $0, herb: herb)
             }!
+						herbDetails.transitioningDelegate = self
             self.present(herbDetails, animated: true)
           }
         )
       }
     }
   }
-
+	
+	private let popAnimator = PopAnimator()
   private(set) var selectedImage: UIImageView!
 }
+
+
+// MARK: - UIViewControllerTransitioningDelegate
+extension ViewController: UIViewControllerTransitioningDelegate {
+	func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> (any UIViewControllerAnimatedTransitioning)? {
+		popAnimator
+	}
+	
+	func animationController(forDismissed dismissed: UIViewController) -> (any UIViewControllerAnimatedTransitioning)? {
+		nil
+	}
+}
+
 
 //MARK:- UIViewController
 extension ViewController {
