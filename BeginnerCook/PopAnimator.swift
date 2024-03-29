@@ -33,6 +33,7 @@
 import UIKit
 
 final class PopAnimator: NSObject {
+	var originFrame = CGRect()
 	let duration: TimeInterval = 1
 }
 
@@ -42,6 +43,39 @@ extension PopAnimator: UIViewControllerAnimatedTransitioning {
 	}
 	
 	func animateTransition(using transitionContext: any UIViewControllerContextTransitioning) {
+		// 1) Set up transition
+		let containerView = transitionContext.containerView
+		
+		guard let toView = transitionContext.view(forKey: .to) else {
+			return
+		}
+		
+		let initialFrame = originFrame
+		let finalFrame = toView.frame
+		
+		toView.transform = .init(
+			translationX: initialFrame.width / finalFrame.width,
+			y: initialFrame.height / finalFrame.height
+		)
+		
+		toView.center = .init(x: initialFrame.minX, y: initialFrame.midY)
+		containerView.addSubview(toView)
+		
+		// 2) Animate
+		UIView.animate(
+			withDuration: duration,
+			delay: 0,
+			usingSpringWithDamping: 0.4,
+			initialSpringVelocity: 0,
+			animations: {
+				toView.transform = .identity
+				toView.center = .init(x: finalFrame.midX, y: finalFrame.midY)
+			},
+			completion: { _ in
+				// 3) Complete transition
+				transitionContext.completeTransition(true)
+			}
+		)
 		
 	}
 	
